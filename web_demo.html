@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMAudio API 演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .result audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .result video {
+            width: 100%;
+            max-height: 400px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 MMAudio</h1>
+            <p>AI 音频生成服务</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('text')">文生音频</button>
+            <button class="tab" onclick="switchTab('video')">视频生音频</button>
+            <button class="tab" onclick="switchTab('system')">系统信息</button>
+        </div>
+
+        <div class="content">
+            <!-- 文生音频 -->
+            <div id="text-tab" class="tab-content active">
+                <div class="info-box">
+                    <strong>提示:</strong> 输入文本描述，AI 将为您生成对应的音频
+                </div>
+
+                <form id="text-form" onsubmit="generateTextAudio(event)">
+                    <div class="form-group">
+                        <label>文本描述 *</label>
+                        <textarea name="prompt" placeholder="例如: a dog barking loudly" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>负面提示词（可选）</label>
+                        <input type="text" name="negative_prompt" placeholder="不想要的内容">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>时长（秒）</label>
+                            <input type="number" name="duration" value="8.0" min="1" max="30" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>模型版本</label>
+                            <select name="model_variant">
+                                <option value="large_44k_v2">large_44k_v2 (推荐)</option>
+                                <option value="large_44k">large_44k</option>
+                                <option value="medium_44k">medium_44k</option>
+                                <option value="small_44k">small_44k</option>
+                                <option value="small_16k">small_16k</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CFG 强度</label>
+                            <input type="number" name="cfg_strength" value="4.5" min="1" max="10" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>采样步数</label>
+                            <input type="number" name="num_steps" value="25" min="10" max="100">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">生成音频</button>
+                </form>
+
+                <div class="loading" id="text-loading">
+                    <div class="spinner"></div>
+                    <p>正在生成音频，请稍候...</p>
+                </div>
+
+                <div class="error" id="text-error"></div>
+
+                <div class="result" id="text-result">
+                    <h3>生成结果</h3>
+                    <p><strong>任务ID:</strong> <span id="text-task-id"></span></p>
+                    <p><strong>时长:</strong> <span id="text-duration"></span> 秒</p>
+                    <p><strong>采样率:</strong> <span id="text-sample-rate"></span> Hz</p>
+                    <audio id="text-audio" controls></audio>
+                    <br>
+                    <a id="text-download" class="download-btn" download>下载音频</a>
+                </div>
+            </div>
+
+            <!-- 视频生音频 -->
+            <div id="video-tab" class="tab-content">
+                <div class="info-box">
+                    <strong>提示:</strong> 上传视频文件，AI 将为视频生成同步音频
+                </div>
+
+                <form id="video-form" onsubmit="generateVideoAudio(event)">
+                    <div class="form-group">
+                        <label>视频文件 *</label>
+                        <input type="file" name="video" accept="video/*" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>文本提示词（可选）</label>
+                        <textarea name="prompt" placeholder="例如: ocean waves crashing"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>时长（秒）</label>
+                            <input type="number" name="duration" value="8.0" min="1" max="30" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>模型版本</label>
+                            <select name="model_variant">
+                                <option value="large_44k_v2">large_44k_v2 (推荐)</option>
+                                <option value="large_44k">large_44k</option>
+                                <option value="medium_44k">medium_44k</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">生成音频</button>
+                </form>
+
+                <div class="loading" id="video-loading">
+                    <div class="spinner"></div>
+                    <p>正在处理视频并生成音频，请稍候...</p>
+                </div>
+
+                <div class="error" id="video-error"></div>
+
+                <div class="result" id="video-result">
+                    <h3>生成结果</h3>
+                    <p><strong>任务ID:</strong> <span id="video-task-id"></span></p>
+                    <audio id="video-audio" controls></audio>
+                    <br>
+                    <a id="video-download" class="download-btn" download>下载音频</a>
+                    <div id="video-with-audio"></div>
+                </div>
+            </div>
+
+            <!-- 系统信息 -->
+            <div id="system-tab" class="tab-content">
+                <div class="info-box">
+                    <strong>系统状态</strong>
+                </div>
+
+                <button class="btn" onclick="loadSystemInfo()">刷新系统信息</button>
+
+                <div class="loading" id="system-loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+
+                <div class="result" id="system-result">
+                    <h3>系统信息</h3>
+                    <div id="system-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        function switchTab(tab) {
+            // 更新标签样式
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 更新内容
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        async function generateTextAudio(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = {
+                prompt: formData.get('prompt'),
+                negative_prompt: formData.get('negative_prompt'),
+                duration: parseFloat(formData.get('duration')),
+                cfg_strength: parseFloat(formData.get('cfg_strength')),
+                num_steps: parseInt(formData.get('num_steps')),
+                seed: 42,
+                model_variant: formData.get('model_variant')
+            };
+
+            const loading = document.getElementById('text-loading');
+            const error = document.getElementById('text-error');
+            const result = document.getElementById('text-result');
+
+            loading.classList.add('show');
+            error.classList.remove('show');
+            result.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/text-to-audio`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const json = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('text-task-id').textContent = json.task_id;
+                    document.getElementById('text-duration').textContent = json.duration;
+                    document.getElementById('text-sample-rate').textContent = json.sample_rate;
+                    
+                    const audioUrl = `${API_BASE}${json.audio_url}`;
+                    document.getElementById('text-audio').src = audioUrl;
+                    document.getElementById('text-download').href = audioUrl;
+                    
+                    result.classList.add('show');
+                } else {
+                    throw new Error(json.detail || '生成失败');
+                }
+            } catch (err) {
+                error.textContent = `错误: ${err.message}`;
+                error.classList.add('show');
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        async function generateVideoAudio(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const loading = document.getElementById('video-loading');
+            const error = document.getElementById('video-error');
+            const result = document.getElementById('video-result');
+
+            loading.classList.add('show');
+            error.classList.remove('show');
+            result.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/video-to-audio`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const json = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('video-task-id').textContent = json.task_id;
+                    
+                    const audioUrl = `${API_BASE}${json.audio_url}`;
+                    document.getElementById('video-audio').src = audioUrl;
+                    document.getElementById('video-download').href = audioUrl;
+                    
+                    if (json.video_url) {
+                        const videoUrl = `${API_BASE}${json.video_url}`;
+                        document.getElementById('video-with-audio').innerHTML = `
+                            <h4 style="margin-top: 20px;">合成视频</h4>
+                            <video controls src="${videoUrl}"></video>
+                            <br>
+                            <a href="${videoUrl}" class="download-btn" download>下载视频</a>
+                        `;
+                    }
+                    
+                    result.classList.add('show');
+                } else {
+                    throw new Error(json.detail || '生成失败');
+                }
+            } catch (err) {
+                error.textContent = `错误: ${err.message}`;
+                error.classList.add('show');
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        async function loadSystemInfo() {
+            const loading = document.getElementById('system-loading');
+            const result = document.getElementById('system-result');
+            const infoDiv = document.getElementById('system-info');
+
+            loading.classList.add('show');
+            result.classList.remove('show');
+
+            try {
+                const [infoRes, statsRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/system/info`),
+                    fetch(`${API_BASE}/api/v1/system/stats`)
+                ]);
+
+                const info = await infoRes.json();
+                const stats = await statsRes.json();
+
+                let html = `
+                    <h4>设备信息</h4>
+                    <p><strong>设备:</strong> ${info.device}</p>
+                    <p><strong>PyTorch 版本:</strong> ${info.torch_version}</p>
+                    <p><strong>CUDA 可用:</strong> ${info.cuda_available ? '是' : '否'}</p>
+                `;
+
+                if (info.gpu_info) {
+                    html += `
+                        <h4 style="margin-top: 20px;">GPU 信息</h4>
+                        <p><strong>名称:</strong> ${info.gpu_info.name || 'N/A'}</p>
+                        <p><strong>数量:</strong> ${info.gpu_info.count || 'N/A'}</p>
+                        <p><strong>显存总量:</strong> ${info.gpu_info.memory_total_gb?.toFixed(2) || 'N/A'} GB</p>
+                    `;
+                }
+
+                html += `
+                    <h4 style="margin-top: 20px;">系统资源</h4>
+                    <p><strong>CPU 使用率:</strong> ${stats.cpu.percent}%</p>
+                    <p><strong>内存使用率:</strong> ${stats.memory.percent}%</p>
+                    <p><strong>磁盘使用率:</strong> ${stats.disk.percent}%</p>
+                `;
+
+                if (stats.gpu) {
+                    html += `
+                        <p><strong>GPU 显存使用:</strong> ${stats.gpu.memory_allocated_gb.toFixed(2)} GB</p>
+                    `;
+                }
+
+                infoDiv.innerHTML = html;
+                result.classList.add('show');
+            } catch (err) {
+                infoDiv.innerHTML = `<p style="color: red;">加载失败: ${err.message}</p>`;
+                result.classList.add('show');
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        // 页面加载时自动加载系统信息
+        window.addEventListener('load', () => {
+            // 可选：自动加载系统信息
+            // loadSystemInfo();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# MMAudio API 服务依赖
+
+# FastAPI 核心
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# 系统监控
+psutil==5.9.6
+
+# 已有的 MMAudio 依赖会从 pyproject.toml 中安装
+# 这里只列出 API 服务额外需要的包
